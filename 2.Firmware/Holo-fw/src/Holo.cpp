@@ -108,7 +108,7 @@ void wifi_init()
         rgb.setBrightness(0).setRGB(0, 64, 64);
         //totaly wait 10 seconds
         delay(500);
-        Serial.print("connect...");
+        Serial.print(wifi_name);
         rgb.setBrightness(0.2).setRGB(128, 0, 0);
     }
     if (i == 21) 
