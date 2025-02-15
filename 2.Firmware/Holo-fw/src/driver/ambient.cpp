@@ -1,6 +1,20 @@
+/*
+ * BH1750FVI Ambient Light Sensor Implementation
+ * 
+ * This file implements the functionality for the BH1750FVI ambient light sensor:
+ * - Sensor initialization and mode configuration
+ * - I2C communication
+ * - Light measurement and averaging
+ */
+
 #include "ambient.h"
 #include "common.h"
 
+/**
+ * Initialize the ambient light sensor with specified mode
+ * Sets up I2C communication and configures sensor operating parameters
+ * @param mode Sensor resolution mode affecting sample time and precision
+ */
 void Ambient::init(int mode)
 {
     mMode = mode;
@@ -17,36 +31,51 @@ void Ambient::init(int mode)
         break;
     }
 
+    // Initialize I2C communication
     Wire.begin(AMB_I2C_SDA, AMB_I2C_SCL);
 
+    // Allow time for sensor to stabilize
     delay(50);
 
-    Wire.beginTransmission(ADDRESS_BH1750FVI); //"notify" the matching device
-    Wire.write(mMode);                         //set operation mode
-    Wire.endTransmission();
+    // Configure sensor with specified mode
+    Wire.beginTransmission(ADDRESS_BH1750FVI); // Start I2C transmission
+    Wire.write(mMode);                         // Set sensor operation mode
+    Wire.endTransmission();                    // End transmission
 }
 
+/**
+ * Read and calculate current ambient light level
+ * Performs rolling average of last 5 measurements for stable readings
+ * @return Average light level in lux units
+ */
 unsigned int Ambient::getLux()
 {
+    // Check if enough time has passed since last reading
     if (millis() - last_time > sample_time)
     {
         last_time = millis();
-        Wire.requestFrom(ADDRESS_BH1750FVI, 2); //ask Arduino to read back 2 bytes from the sensor
-        highByte = Wire.read();                 // get the high byte
-        lowByte = Wire.read();                  // get the low byte
+        
+        // Read 2 bytes from sensor (16-bit value)
+        Wire.requestFrom(ADDRESS_BH1750FVI, 2);
+        highByte = Wire.read();                 // Most significant byte
+        lowByte = Wire.read();                  // Least significant byte
 
-        sensorOut = (highByte << 8) | lowByte;
-        illuminance = sensorOut / 1.2;
+        // Convert bytes to illuminance value
+        sensorOut = (highByte << 8) | lowByte;  // Combine bytes
+        illuminance = sensorOut / 1.2;          // Convert to lux (per datasheet)
 
+        // Update rolling buffer of measurements
         for (int i = 4; i > 0; i--)
             lux[i] = lux[i - 1];
         lux[0] = illuminance;
 
-        Wire.beginTransmission(ADDRESS_BH1750FVI); //"notify" the matching device
-        Wire.write(mMode);                         //set operation mode
+        // Trigger next measurement
+        Wire.beginTransmission(ADDRESS_BH1750FVI);
+        Wire.write(mMode);
         Wire.endTransmission();
     }
 
+    // Calculate average of last 5 measurements
     unsigned int avg = 0;
     for (int i = 4; i >= 0; i--)
         avg += lux[i];

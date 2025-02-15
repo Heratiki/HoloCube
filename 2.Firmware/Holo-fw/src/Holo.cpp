@@ -1,3 +1,14 @@
+/*
+ * HoloCube Main Application
+ * 
+ * This is the main application file for the HoloCube device, which handles:
+ * - System initialization and setup
+ * - WiFi connectivity
+ * - Web server functionality for file management
+ * - MPU6050 motion detection
+ * - Screen and RGB LED control
+ */
+
 #include <SPIFFS.h>
 #include <esp32-hal.h>
 #include <esp32-hal-timer.h>
@@ -21,14 +32,20 @@ SysUtilConfig sys_cfg;
 SysMpuConfig mpu_cfg;
 RgbConfig g_rgb_cfg;
 
+// Motion detection control flags and data
 static bool isCheckAction = false;
-ImuAction *act_info; // 存放mpu6050返回的数据
-File uploadFile;
+ImuAction *act_info; // Stores MPU6050 motion sensor data
+File uploadFile;     // File handle for upload operations
 
+// Timer for periodic motion detection checks
 TimerHandle_t xTimerAction = NULL;
+
+/**
+ * Timer callback for motion detection
+ * Triggers motion check every 200ms (defined in setup)
+ */
 void actionCheckHandle(TimerHandle_t xTimer)
 {
-    // 标志需要检测动作
     isCheckAction = true;
 }
 void returnOK() 
@@ -70,6 +87,13 @@ String getValue(String data, char separator, int index)
     return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
+/**
+ * Initialize WiFi connection using credentials from config file
+ * Attempts to connect to WiFi network and indicates status via RGB LED:
+ * - Blue during connection attempt
+ * - Red on failure
+ * - Green on success
+ */
 void wifi_init()
 {
     File config_file;
@@ -302,6 +326,17 @@ void reportDevice()
   fiber_server.send(200, "text/plain",ip);
 }
 
+/**
+ * Main setup function - initializes all hardware components and services:
+ * - Serial communication
+ * - SPIFFS file system
+ * - Display screen
+ * - RGB LED
+ * - Ambient light sensor
+ * - SD card
+ * - MPU6050 motion sensor
+ * - Web server endpoints
+ */
 void setup()
 {
     Serial.begin(115200);
@@ -373,6 +408,13 @@ void setup()
 
 
 
+/**
+ * Main program loop:
+ * - Handles web server client requests
+ * - Updates screen content
+ * - Checks for motion events from MPU6050
+ * - Processes picture updates based on motion
+ */
 void loop()
 {
     fiber_server.handleClient();

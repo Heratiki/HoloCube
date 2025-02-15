@@ -1,6 +1,18 @@
+/*
+ * HoloCube Common Definitions
+ * 
+ * This header file contains all common definitions and configurations for the HoloCube project:
+ * - Hardware pin assignments
+ * - Screen configurations
+ * - System utility configurations
+ * - External device drivers
+ * - Global object declarations
+ */
+
 #ifndef COMMON_H
 #define COMMON_H
 
+// Current version of the All-In-One firmware
 #define AIO_VERSION "2.2.0"
 
 #include "Arduino.h"
@@ -12,30 +24,30 @@
 #include "driver/imu.h"
 #include "network.h"
 
-// MUP6050
-#define IMU_I2C_SDA 32
-#define IMU_I2C_SCL 33
+// MPU6050 Motion Sensor I2C Pins
+#define IMU_I2C_SDA 32    // I2C Data pin for MPU6050
+#define IMU_I2C_SCL 33    // I2C Clock pin for MPU6050
 
-extern IMU mpu; // 原则上只提供给主程序调用
-extern SdCard tf;
-extern Pixel rgb;
-// extern Config g_cfg;       // 全局配置文件
-extern Network g_network;  // 网络连接
-extern FlashFS g_flashCfg; // flash中的文件系统（替代原先的Preferences）
-extern Display screen;     // 屏幕对象
-extern Ambient ambLight;   // 光纤传感器对象
+// Global object declarations for hardware components
+extern IMU mpu;           // Motion sensor (MPU6050) interface - only for main program use
+extern SdCard tf;         // SD Card interface
+extern Pixel rgb;         // RGB LED control
+extern Network g_network; // Network connection manager
+extern FlashFS g_flashCfg;// Flash filesystem (replaces previous Preferences)
+extern Display screen;    // Display interface
+extern Ambient ambLight;  // Ambient light sensor interface
 
 boolean doDelayMillisTime(unsigned long interval,
                           unsigned long *previousMillis,
                           boolean state);
 
-// 光感 (与MPU6050一致)
+// Ambient Light Sensor I2C Pins (shared with MPU6050)
 #define AMB_I2C_SDA 32
 #define AMB_I2C_SCL 33
 
-// 屏幕尺寸
-#define SCREEN_HOR_RES 240     // 水平
-#define SCREEN_VER_RES 240     // 竖直
+// Screen Resolution
+#define SCREEN_HOR_RES 240     // Horizontal resolution
+#define SCREEN_VER_RES 240     // Vertical resolution
 
 // TFT屏幕接口
 // #define PEAK
@@ -53,20 +65,28 @@ boolean doDelayMillisTime(unsigned long interval,
 
 #define LCD_BL_PWM_CHANNEL 0
 
+/**
+ * System Utility Configuration Structure
+ * Stores various system settings including:
+ * - WiFi credentials for up to 3 networks
+ * - System behavior settings
+ * - Display settings
+ * - Motion sensor settings
+ */
 struct SysUtilConfig
 {
-    String ssid_0;
-    String password_0;
-    String ssid_1;
-    String password_1;
-    String ssid_2;
-    String password_2;
-    String auto_start_app;        // 开机自启的APP名字
-    uint8_t power_mode;           // 功耗模式（0为节能模式 1为性能模式）
-    uint8_t backLight;            // 屏幕亮度（1-100）
-    uint8_t rotation;             // 屏幕旋转方向
-    uint8_t auto_calibration_mpu; // 是否自动校准陀螺仪 0关闭自动校准 1打开自动校准
-    uint8_t mpu_order;            // 操作方向
+    String ssid_0;                // Primary WiFi network SSID
+    String password_0;            // Primary WiFi password
+    String ssid_1;                // Secondary WiFi SSID
+    String password_1;            // Secondary WiFi password
+    String ssid_2;                // Tertiary WiFi SSID
+    String password_2;            // Tertiary WiFi password
+    String auto_start_app;        // Name of app to auto-start on boot
+    uint8_t power_mode;           // Power mode (0=eco mode, 1=performance mode)
+    uint8_t backLight;            // Screen brightness (1-100)
+    uint8_t rotation;             // Screen rotation
+    uint8_t auto_calibration_mpu; // MPU auto-calibration (0=off, 1=on)
+    uint8_t mpu_order;            // Motion control orientation
 };
 
 #define GFX 0

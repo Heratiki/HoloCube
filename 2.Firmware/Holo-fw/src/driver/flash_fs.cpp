@@ -1,15 +1,22 @@
+/*
+ * Flash Filesystem Implementation
+ * 
+ * This file implements the SPIFFS (SPI Flash File System) operations:
+ * - File operations (read, write, append, delete)
+ * - Directory listing and management
+ * - File system testing and benchmarking
+ * 
+ * Note: SPIFFS must be formatted before first use. Use the LITTLEFS plugin
+ * to create a partition: https://github.com/lorol/arduino-esp32littlefs-plugin
+ */
+
 #include <Arduino.h>
 #include "FS.h"
-// #include <LittleFS.h>
 #include <SPIFFS.h>
 #include <time.h>
 #include "flash_fs.h"
 
-/* You only need to format SPIFFS the first time you run a
-   test or else use the LITTLEFS plugin to create a partition
-   https://github.com/lorol/arduino-esp32littlefs-plugin */
-
-#define FORMAT_LITTLEFS_IF_FAILED true
+#define FORMAT_LITTLEFS_IF_FAILED true  // Format filesystem if mounting fails
 
 FlashFS::FlashFS()
 {
@@ -45,6 +52,12 @@ FlashFS::~FlashFS()
 {
 }
 
+/**
+ * List directory contents recursively
+ * @param dirname Directory to list
+ * @param levels Number of subdirectory levels to traverse
+ * Prints file/directory details including size and last modification time
+ */
 void FlashFS::listDir(const char *dirname, uint8_t levels)
 {
     Serial.printf("Listing directory: %s\r\n", dirname);
@@ -120,6 +133,12 @@ void FlashFS::listDir(const char *dirname, uint8_t levels)
 //     }
 // }
 
+/**
+ * Read file contents into buffer
+ * @param path Path to file
+ * @param info Buffer to store file contents
+ * @return Number of bytes read
+ */
 uint16_t FlashFS::readFile(const char *path, uint8_t *info)
 {
     Serial.printf("Reading file: %s\r\n", path);
@@ -142,6 +161,11 @@ uint16_t FlashFS::readFile(const char *path, uint8_t *info)
     return ret_len;
 }
 
+/**
+ * Write data to file (overwrites existing content)
+ * @param path Path to file
+ * @param message Data to write
+ */
 void FlashFS::writeFile(const char *path, const char *message)
 {
     Serial.printf("Writing file: %s\r\n", path);
@@ -163,6 +187,11 @@ void FlashFS::writeFile(const char *path, const char *message)
     file.close();
 }
 
+/**
+ * Append data to existing file
+ * @param path Path to file
+ * @param message Data to append
+ */
 void FlashFS::appendFile(const char *path, const char *message)
 {
     Serial.printf("Appending to file: %s\r\n", path);
@@ -184,6 +213,11 @@ void FlashFS::appendFile(const char *path, const char *message)
     file.close();
 }
 
+/**
+ * Rename or move a file
+ * @param src Source file path
+ * @param dst Destination file path
+ */
 void FlashFS::renameFile(const char *src, const char *dst)
 {
     Serial.printf("Renaming file %s to %s\r\n", src, dst);
@@ -197,6 +231,10 @@ void FlashFS::renameFile(const char *src, const char *dst)
     }
 }
 
+/**
+ * Delete a file
+ * @param path Path to file to delete
+ */
 void FlashFS::deleteFile(const char *path)
 {
     Serial.printf("Deleting file: %s\r\n", path);
@@ -286,6 +324,11 @@ void FlashFS::deleteFile(const char *path)
 //     }
 // }
 
+/**
+ * Test file I/O performance
+ * Performs write and read operations with 512-byte blocks
+ * @param path Path to test file
+ */
 void FlashFS::testFileIO(const char *path)
 {
     Serial.printf("Testing file I/O with %s\r\n", path);
@@ -350,6 +393,14 @@ void FlashFS::testFileIO(const char *path)
     }
 }
 
+/**
+ * Parse command line parameters
+ * Splits input string into array of arguments
+ * @param info Input string containing newline-separated arguments
+ * @param argc Number of arguments to parse
+ * @param argv Array to store parsed arguments
+ * @return true if parsing successful
+ */
 bool analyseParam(char *info, int argc, char **argv)
 {
     int cnt; // 记录解析到第几个参数
